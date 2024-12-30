@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { AlertCircle } from 'lucide-react';
 
@@ -21,6 +20,8 @@ const MuseScoreDownloader = () => {
     }
     setIsLoading(false);
   };
+
+  const formats = ['pdf', 'midi', 'mp3'];
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-black">
@@ -47,31 +48,39 @@ const MuseScoreDownloader = () => {
 
           <div className="space-y-4">
             <Label className="text-lg font-mono text-white uppercase">Format</Label>
-            <RadioGroup
-              value={format}
-              onValueChange={setFormat}
-              className="flex flex-col space-y-3"
-            >
-              {['pdf', 'midi', 'mp3'].map((value) => (
-                <div key={value} className="flex items-center space-x-3 p-3 border-2 border-white hover:bg-white hover:text-black transition-colors">
-                  <RadioGroupItem value={value} id={value} className="border-white" />
-                  <Label htmlFor={value} className="font-mono uppercase cursor-pointer">
+            <div className="flex flex-col space-y-3">
+              {formats.map((value) => (
+                <button
+                  key={value}
+                  onClick={() => setFormat(value)}
+                  className={`flex items-center space-x-3 p-3 border-2 border-white transition-colors w-full text-left ${
+                    format === value 
+                      ? 'bg-white text-black' 
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <div className={`w-4 h-4 border-2 flex items-center justify-center ${
+                    format === value ? 'border-black' : 'border-white'
+                  }`}>
+                    {format === value && <div className="w-2 h-2 bg-black" />}
+                  </div>
+                  <span className="font-mono uppercase">
                     {value}
-                  </Label>
-                </div>
+                  </span>
+                </button>
               ))}
-            </RadioGroup>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-base text-white font-mono p-4 border-2 border-white">
-            <AlertCircle size={20} />
-            <span className="uppercase text-sm">Requires Node.js</span>
-          </div>
+          {/* <div className="flex items-center space-x-2 text-base text-white font-mono p-4 border-2 border-white"> */}
+          {/*   <AlertCircle size={20} /> */}
+          {/*   <span className="uppercase text-sm">Requires Node.js</span> */}
+          {/* </div> */}
 
           <Button 
             onClick={handleDownload}
             disabled={!url || isLoading}
-            className="w-full p-4 text-lg bg-white text-black font-mono uppercase hover:bg-black hover:text-white border-2 border-white transition-colors"
+            className="w-full p-4 text-lg bg-white text-black font-mono uppercase hover:bg-black hover:text-white border-2 border-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? '[ Processing... ]' : '[ Download ]'}
           </Button>
