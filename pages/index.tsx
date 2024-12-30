@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { AlertCircle } from 'lucide-react';
 
+
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 const MuseScoreDownloader = () => {
   const [url, setUrl] = useState('');
   const [format, setFormat] = useState('pdf');
@@ -12,20 +16,50 @@ const MuseScoreDownloader = () => {
 
   const handleDownload = async () => {
     setIsLoading(true);
+    
     try {
-      const command = `npx dl-librescore@latest "${url}" -f ${format}`;
-      console.log('Download command:', command);
+      const response = await fetch(`${API_URL}/api/download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url, format }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Download failed');
+      }
+
+      // Get filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+        : `score.${format}`;
+
+      // Convert response to blob and trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
     } catch (error) {
       console.error('Download failed:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const formats = ['pdf', 'midi', 'mp3'];
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-black">
-      <Card className="w-full max-w-2xl bg-black border-2 border-white [image-rendering:pixelated]">
+      <Card className="w-full max-w-2xl bg-black border-2 border-white">
         <CardHeader className="text-center border-b-2 border-white">
           <CardTitle className="text-2xl font-mono text-white uppercase tracking-wider">
             MuseScore Downloader
@@ -72,10 +106,6 @@ const MuseScoreDownloader = () => {
             </div>
           </div>
 
-          {/* <div className="flex items-center space-x-2 text-base text-white font-mono p-4 border-2 border-white"> */}
-          {/*   <AlertCircle size={20} /> */}
-          {/*   <span className="uppercase text-sm">Requires Node.js</span> */}
-          {/* </div> */}
 
           <Button 
             onClick={handleDownload}
